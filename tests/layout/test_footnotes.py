@@ -987,3 +987,33 @@ def test_footnotes_column_converge():
     column1, column2 = div.children
     assert column1.height == column2.height == p.height == 2
     assert footnote_area.height == 2
+
+
+@assert_no_logs
+def test_footnote_fits_exactly():
+    page, = render_pages('''
+        <style>
+            @page {
+                size: A6;
+                margin: 15mm;
+                @footnote { margin-top: 1em }
+            }
+            body {
+                font-family: weasyprint;
+            }
+            span {
+                float: footnote;
+                line-height: 10pt;
+            }
+        </style>
+        <p>Text.<span>Footnote.</span></p>''')
+    html, footnote_area = page.children
+    body, = html.children
+    paragraph, = body.children
+    paragraph_textbox, footnote_call = paragraph.children[0].children
+    assert paragraph_textbox.text == 'Text.'
+    assert footnote_call.children[0].text == '1'
+    footnote_marker, footnote_textbox = (
+        footnote_area.children[0].children[0].children)
+    assert footnote_marker.children[0].text == '1.'
+    assert footnote_textbox.text == 'Footnote.'
